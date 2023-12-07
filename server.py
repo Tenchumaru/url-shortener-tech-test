@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 app = FastAPI()
-BASE_URL: str = "http://locahost:8000"
+BASE_URL: str = "http://localhost:8000"
 
 
 class ShortenRequest(BaseModel):
