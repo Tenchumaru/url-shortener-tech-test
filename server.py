@@ -20,18 +20,16 @@ async def url_shorten(request: ShortenRequest):
     specified URL.
     """
     while True:
-        # This loop handles two possible conditions.
-        # 1.  The secrets.token_urlsafe might return a key already in the cache.  Loop if the first cache.add invocation fails.
-        # 2.  Multiple processes might be processing the same URL.  Only one will succeed in invoking the second cache.add.
-        short_url = cache.get(request.url)
-        if short_url:
-            break
-        short_url = secrets.token_urlsafe(4)
-        if cache.add(short_url, request.url):
-            if cache.add(request.url, short_url):
+        # This loop is here since secrets.token_urlsafe might return a key already in the cache.
+        # Loop if the first cache.add invocation fails due to a duplicate key.
+        with cache.transact():
+            short_url = cache.get(request.url)
+            if short_url:
                 break
-            else:
-                cache.delete(short_url)
+            short_url = secrets.token_urlsafe(4)
+            if cache.add(short_url, request.url):
+                cache.add(request.url, short_url)
+                break
     return {"short_url": f"{BASE_URL}/r/{short_url}"}
 
 
